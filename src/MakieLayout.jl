@@ -26,6 +26,7 @@ include("lobjects/laxis.jl")
 include("lobjects/lcolorbar.jl")
 include("lobjects/ltext.jl")
 include("lobjects/lslider.jl")
+include("lobjects/lrangeslider.jl")
 include("lobjects/lbutton.jl")
 include("lobjects/lrect.jl")
 include("lobjects/ltoggle.jl")
@@ -35,6 +36,7 @@ include("gridapi.jl")
 
 export LAxis
 export LSlider
+export LRangeSlider
 export LButton
 export LColorbar
 export LText

@@ -216,6 +216,13 @@ struct LSlider <: LObject
     decorations::Dict{Symbol, Any}
 end
 
+struct LRangeSlider <: LObject
+    scene::Scene
+    layoutnodes::LayoutNodes
+    attributes::Attributes
+    decorations::Dict{Symbol, Any}
+end
+
 struct LButton <: LObject
     scene::Scene
     layoutnodes::LayoutNodes
