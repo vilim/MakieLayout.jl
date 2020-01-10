@@ -1,4 +1,4 @@
-function LSlider(parent::Scene; bbox = nothing, kwargs...)
+function LRangeSlider(parent::Scene; bbox = nothing, kwargs...)
 
     attrs = merge!(Attributes(kwargs), default_attributes(LSlider))
 
@@ -140,6 +140,7 @@ function LSlider(parent::Scene; bbox = nothing, kwargs...)
             dragging_left[] = true
         else
             dragging_right[] = true
+        end
         dif = state.pos - state.prev
         fraction = if horizontal[]
             dif[1] / (width(sliderbox[]) - 2pad)
