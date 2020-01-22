@@ -49,7 +49,7 @@ function LRangeSlider(parent::Scene; bbox = nothing, kwargs...)
         end
     end
 
-    selected_indices = Node([1, length(sliderrange)])
+    selected_indices = Node([1, length(sliderrange[])])
 
     # the fraction on the slider corresponding to the selected_indices
     # this is only used after dragging_left
@@ -66,11 +66,8 @@ function LRangeSlider(parent::Scene; bbox = nothing, kwargs...)
     on(sliderfractions) do frac
         # only update displayed fraction through sliderfraction if not dragging_left
         # dragging_left overrides the value so there is clear mouse interaction
-        if !dragging_left[]
-            displayed_sliderfraction[][1] = frac[1]
-        end
-        if !dragging_right[]
-            displayed_sliderfraction[][2] = frac[2]
+        if !dragging_left[] && !dragging_right[]
+            displayed_sliderfraction[] = frac
         end
 
     end
@@ -136,17 +133,29 @@ function LRangeSlider(parent::Scene; bbox = nothing, kwargs...)
 
         pad = buttonradius[] + buttonstrokewidth[]
 
-        if abs(state.prev - displayed_sliderfraction[][1]) < abs(state.prev - displayed_sliderfraction[][2])
+        
+        dif = state.pos - state.prev
+
+        slider_len = horizontal[] ? (width(sliderbox[]) - 2pad) : (height(sliderbox[]) - 2pad)
+
+        fraction = if horizontal[]
+            dif[1] / slider_len
+        else
+            dif[2] / slider_len
+        end
+
+        abs_pos = if horizontal[]
+            state.pos[1]
+        else
+            state.pos[2]
+        end
+
+        if abs(abs_pos - displayed_sliderfraction[][1]*slider_len) < abs(abs_pos - displayed_sliderfraction[][2]*slider_len)
             dragging_left[] = true
         else
             dragging_right[] = true
         end
-        dif = state.pos - state.prev
-        fraction = if horizontal[]
-            dif[1] / (width(sliderbox[]) - 2pad)
-        else
-            dif[2] / (height(sliderbox[]) - 2pad)
-        end
+
         if fraction != 0.0f0
             @async begin
                 idx_sel = dragging_left[] ? 1 : 2
@@ -168,7 +177,7 @@ function LRangeSlider(parent::Scene; bbox = nothing, kwargs...)
         dragging_left[] = false
         dragging_right[] = false
         # adjust slider to closest legal value
-        sliderfraction[] = sliderfraction[]
+        sliderfractions[] = sort(sliderfractions[])
     end
 
     scenestate = addmousestate!(subscene)
@@ -189,13 +198,13 @@ function LRangeSlider(parent::Scene; bbox = nothing, kwargs...)
 
     onmouseenter(scenestate) do state
         # bcolor[] = color_active[]
-        linecolors[] = [color_active[], color_inactive[]]
+        linecolors[] = [color_inactive[], color_active[], color_inactive[]]
         button.strokecolor = color_active[]
     end
 
     onmouseout(scenestate) do state
         # bcolor[] = color_inactive[]
-        linecolors[] = [color_active_dimmed[], color_inactive[]]
+        linecolors[] = [color_inactive[], color_active_dimmed[], color_inactive[]]
         button.strokecolor = color_active_dimmed[]
     end
 
