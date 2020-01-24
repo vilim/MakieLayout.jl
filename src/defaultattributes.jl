@@ -230,6 +230,10 @@ function default_attributes(::Type{LSlider})
     )
 end
 
+function default_attributes(::Type{LRangeSlider})
+    return merge!(default_attributes(LSlider), Attributes(startvalues=[2, 8]))
+end
+
 function default_attributes(::Type{LToggle})
     Attributes(
         halign = :center,

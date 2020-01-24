@@ -1,6 +1,6 @@
 function LRangeSlider(parent::Scene; bbox = nothing, kwargs...)
 
-    attrs = merge!(Attributes(kwargs), default_attributes(LSlider))
+    attrs = merge!(Attributes(kwargs), default_attributes(LRangeSlider))
 
     decorations = Dict{Symbol, Any}()
 
@@ -41,7 +41,7 @@ function LRangeSlider(parent::Scene; bbox = nothing, kwargs...)
         if horizontal
             y = bottom(bb) + height(bb) / 2
             [Point2f0(left(bb), y),
-            Point2f0(right(bb), y)]
+             Point2f0(right(bb), y)]
         else
             x = left(bb) + width(bb) / 2
             [Point2f0(x, bottom(bb)),
@@ -61,13 +61,13 @@ function LRangeSlider(parent::Scene; bbox = nothing, kwargs...)
     dragging_right = Node(false)
 
     # what the slider actually displays
-    displayed_sliderfraction = Node([0.0, 1.0])
+    displayed_sliderfractions = Node([0.0, 1.0])
 
     on(sliderfractions) do frac
         # only update displayed fraction through sliderfraction if not dragging_left
         # dragging_left overrides the value so there is clear mouse interaction
         if !dragging_left[] && !dragging_right[]
-            displayed_sliderfraction[] = frac
+            displayed_sliderfractions[] = frac
         end
 
     end
@@ -79,7 +79,7 @@ function LRangeSlider(parent::Scene; bbox = nothing, kwargs...)
     # initialize slider value with closest from range
     selected_indices[] = closest_index.(Ref(sliderrange[]), startvalues[])
 
-    buttonpoints = lift(sliderbox, horizontal, displayed_sliderfraction, buttonradius,
+    buttonpoints = lift(sliderbox, horizontal, displayed_sliderfractions, buttonradius,
             buttonstrokewidth) do bb, horizontal, sf, brad, bstw
 
         pad = brad + bstw
@@ -114,13 +114,6 @@ function LRangeSlider(parent::Scene; bbox = nothing, kwargs...)
 
     buttonstate = addmousestate!(subscene, button)
 
-    # on(buttonstate) do state
-    #     typ = typeof(state.typ)
-    #     if typ in (MouseDown, MouseDrag, MouseDragStart, MouseDragStop)
-    #         bcolor[] = color_active[]
-    #     end
-    # end
-
     onmouseleftdown(buttonstate) do state
         bcolor[] = color_active[]
     end
@@ -150,7 +143,7 @@ function LRangeSlider(parent::Scene; bbox = nothing, kwargs...)
             state.pos[2]
         end
 
-        if abs(abs_pos - displayed_sliderfraction[][1]*slider_len) < abs(abs_pos - displayed_sliderfraction[][2]*slider_len)
+        if abs(abs_pos - displayed_sliderfractions[][1]*slider_len) < abs(abs_pos - displayed_sliderfractions[][2]*slider_len)
             dragging_left[] = true
         else
             dragging_right[] = true
@@ -158,17 +151,21 @@ function LRangeSlider(parent::Scene; bbox = nothing, kwargs...)
 
         if fraction != 0.0f0
             @async begin
-                idx_sel = dragging_left[] ? 1 : 2
-                
-                newfraction = min(max(displayed_sliderfraction[][idx_sel] + fraction, 0f0), 1f0)
-                displayed_sliderfraction[][idx_sel] = newfraction
-                displayed_sliderfraction[] = displayed_sliderfraction[]
+                if dragging_left[]
+                    idx_sel = 1
+                    newfraction = min(max(displayed_sliderfractions[][1] + fraction, 0f0), displayed_sliderfractions[][2])
+                else
+                    idx_sel = 2
+                    newfraction =  min(max(displayed_sliderfractions[][2] + fraction, displayed_sliderfractions[][1]), 1f0)
+                end
+                displayed_sliderfractions[][idx_sel] = newfraction
 
                 newindex = closest_fractionindex(sliderrange[], newfraction)
                 if selected_indices[][idx_sel] != newindex
                     selected_indices[][idx_sel] = newindex
                     selected_indices[] = selected_indices[]
                 end
+                displayed_sliderfractions[] = displayed_sliderfractions[]
             end
         end
     end
@@ -177,7 +174,8 @@ function LRangeSlider(parent::Scene; bbox = nothing, kwargs...)
         dragging_left[] = false
         dragging_right[] = false
         # adjust slider to closest legal value
-        sliderfractions[] = sort(sliderfractions[])
+        displayed_sliderfractions[] = displayed_sliderfractions[]
+        sliderfractions[] = sliderfractions[]
     end
 
     scenestate = addmousestate!(subscene)
